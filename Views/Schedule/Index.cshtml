@@ -1,0 +1,38 @@
+@model List<ShiftScheduler.Models.ShiftAssignment>
+
+@{
+    ViewData["Title"] = "Schedule";
+}
+
+<h1>Generated Schedule</h1>
+
+<table border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
+    <tr>
+        <th>Shift Date</th>
+        <th>Time</th>
+        <th>Skills Needed</th>
+        <th>Employees</th>
+    </tr>
+
+    @foreach (var s in Model)
+    {
+        <tr>
+            <td>@s.Shift.Date.ToShortDateString()</td>
+            <td>@s.Shift.StartTime - @s.Shift.EndTime</td>
+            <td>@string.Join(", ", s.Shift.RequiredSkills)</td>
+            <td>
+                @if (s.AssignedEmployees.Count == 0)
+                {
+                    <span style="color:red;">No one assigned</span>
+                }
+                else
+                {
+                    foreach (var e in s.AssignedEmployees)
+                    {
+                        <div>@e.Name (@e.Type) - @string.Join(", ", e.Skills)</div>
+                    }
+                }
+            </td>
+        </tr>
+    }
+</table>
