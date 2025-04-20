@@ -1,88 +1,160 @@
-using Microsoft.AspNetCore.Mvc;
-using ShiftScheduler.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using ShiftScheduler.Models;
 
 namespace ShiftScheduler.Controllers
 {
     public class ScheduleController : Controller
     {
+        // ─── static in‑memory store ─────────────────────────────
+        private static readonly List<Employee> _employees = new List<Employee>();
+        private static readonly List<Shift>    _shifts    = new List<Shift>();
+        private static bool                    _generated = false;
+
+        // ─── Seed data once ──────────────────────────────────────
+        static ScheduleController()
+        {
+            // Employees
+            var alice = new Employee
+            {
+                Id             = 1,
+                Name           = "Alice",
+                EmploymentType = EmploymentType.Permanent,
+                PrefersMorning = true,
+                PrefersEvening = false,
+                AvoidsWeekends = true,
+                Skills         = new List<Skill> { Skill.Manager }
+            };
+            alice.Availability.AddRange(new[]
+            {
+                new AvailabilitySlot(DayOfWeek.Monday,    ShiftTime.Morning),
+                new AvailabilitySlot(DayOfWeek.Tuesday,   ShiftTime.Morning),
+                new AvailabilitySlot(DayOfWeek.Wednesday, ShiftTime.Morning),
+                new AvailabilitySlot(DayOfWeek.Thursday,  ShiftTime.Morning)
+            });
+            _employees.Add(alice);
+
+            var bob = new Employee
+            {
+                Id             = 2,
+                Name           = "Bob",
+                EmploymentType = EmploymentType.Permanent,
+                PrefersMorning = false,
+                PrefersEvening = true,
+                AvoidsWeekends = true,
+                Skills         = new List<Skill> { Skill.Sales }
+            };
+            bob.Availability.AddRange(new[]
+            {
+                new AvailabilitySlot(DayOfWeek.Monday,    ShiftTime.Evening),
+                new AvailabilitySlot(DayOfWeek.Wednesday, ShiftTime.Evening)
+            });
+            _employees.Add(bob);
+
+            var charlie = new Employee
+            {
+                Id             = 3,
+                Name           = "Charlie",
+                EmploymentType = EmploymentType.Temporary,
+                PrefersMorning = false,
+                PrefersEvening = false,
+                AvoidsWeekends = false,
+                Skills         = new List<Skill> { Skill.Sales, Skill.Training }
+            };
+            foreach (DayOfWeek d in Enum.GetValues(typeof(DayOfWeek)))
+            {
+                charlie.Availability.Add(new AvailabilitySlot(d, ShiftTime.Morning));
+                charlie.Availability.Add(new AvailabilitySlot(d, ShiftTime.Evening));
+            }
+            _employees.Add(charlie);
+
+            // Shifts
+            _shifts.Add(new Shift
+            {
+                Id                = 101,
+                Name              = "Monday Morning",
+                Day               = DayOfWeek.Monday,
+                ShiftTime         = ShiftTime.Morning,
+                RequiredEmployees = 2,
+                RequiredSkills    = new List<Skill> { Skill.Manager, Skill.Sales }
+            });
+            _shifts.Add(new Shift
+            {
+                Id                = 102,
+                Name              = "Monday Evening",
+                Day               = DayOfWeek.Monday,
+                ShiftTime         = ShiftTime.Evening,
+                RequiredEmployees = 1,
+                RequiredSkills    = new List<Skill> { Skill.Sales }
+            });
+            _shifts.Add(new Shift
+            {
+                Id                = 103,
+                Name              = "Saturday Morning",
+                Day               = DayOfWeek.Saturday,
+                ShiftTime         = ShiftTime.Morning,
+                RequiredEmployees = 1,
+                RequiredSkills    = new List<Skill> { Skill.Manager }
+            });
+        }
+
+        // ─── GET: /Schedule ──────────────────────────────────────
+        [HttpGet]
         public IActionResult Index()
         {
-            // === 1. Dummy Employees ===
-            var employees = new List<Employee>
+            if (!_generated)
             {
-                new Employee
-                {
-                    Id = 1,
-                    Name = "Alice",
-                    Type = EmploymentType.Permanent,
-                    Skills = new List<string> { "Reception", "Sales" },
-                    AvailableDays = new List<DayOfWeek> { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday }
-                },
-                new Employee
-                {
-                    Id = 2,
-                    Name = "Bob",
-                    Type = EmploymentType.Temporary,
-                    Skills = new List<string> { "Cleaning", "Spa" },
-                    AvailableDays = new List<DayOfWeek> { DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday }
-                },
-                new Employee
-                {
-                    Id = 3,
-                    Name = "Charlie",
-                    Type = EmploymentType.Permanent,
-                    Skills = new List<string> { "Trainer" },
-                    AvailableDays = new List<DayOfWeek> { DayOfWeek.Monday, DayOfWeek.Thursday }
-                },
-                new Employee
-                {
-                    Id = 4,
-                    Name = "Diana",
-                    Type = EmploymentType.Temporary,
-                    Skills = new List<string> { "Sales", "Trainer" },
-                    AvailableDays = new List<DayOfWeek> { DayOfWeek.Tuesday, DayOfWeek.Friday }
-                }
-            };
+                GeneticScheduler.GenerateSchedule(_employees, _shifts);
+                _generated = true;
+            }
 
-            // === 2. Dummy Shifts ===
-            var shifts = new List<Shift>
+            var vm = new ScheduleViewModel
             {
-                new Shift
-                {
-                    Id = 101,
-                    Date = new DateTime(2025, 4, 21), // Monday
-                    StartTime = TimeSpan.FromHours(8),
-                    EndTime = TimeSpan.FromHours(12),
-                    RequiredEmployees = 2,
-                    RequiredSkills = new List<string> { "Reception" }
-                },
-                new Shift
-                {
-                    Id = 102,
-                    Date = new DateTime(2025, 4, 22), // Tuesday
-                    StartTime = TimeSpan.FromHours(12),
-                    EndTime = TimeSpan.FromHours(16),
-                    RequiredEmployees = 2,
-                    RequiredSkills = new List<string> { "Trainer", "Sales" }
-                },
-                new Shift
-                {
-                    Id = 103,
-                    Date = new DateTime(2025, 4, 23), // Wednesday
-                    StartTime = TimeSpan.FromHours(9),
-                    EndTime = TimeSpan.FromHours(13),
-                    RequiredEmployees = 2,
-                    RequiredSkills = new List<string> { "Cleaning", "Spa" }
-                }
+                Shifts    = _shifts.OrderBy(s => s.Day).ThenBy(s => s.ShiftTime).ToList(),
+                Employees = _employees
             };
+            return View(vm);
+        }
 
-            // === 3. Run Genetic Algorithm ===
-            var bestSchedule = GeneticScheduler.GenerateSchedule(employees, shifts);
+        // ─── GET: /Schedule/EditSchedule ────────────────────────
+        [HttpGet]
+        public IActionResult EditSchedule()
+        {
+            var vm = new ScheduleViewModel
+            {
+                Shifts    = _shifts.OrderBy(s => s.Day).ThenBy(s => s.ShiftTime).ToList(),
+                Employees = _employees
+            };
+            return View(vm);
+        }
 
-            // === 4. Send to View ===
-            return View(bestSchedule);
+        // ─── POST: /Schedule/SaveSchedule ───────────────────────
+        [HttpPost]
+        public IActionResult SaveSchedule(IFormCollection form)
+        {
+            foreach (var shift in _shifts)
+            {
+                // Main employee
+                var mainKey = $"main_{shift.Id}";
+                if (form.TryGetValue(mainKey, out var mainVals) &&
+                    int.TryParse(mainVals.FirstOrDefault(), out var mainId))
+                {
+                    shift.AssignedEmployee = _employees.FirstOrDefault(e => e.Id == mainId);
+                }
+
+                // Backup employee
+                var backupKey = $"backup_{shift.Id}";
+                if (form.TryGetValue(backupKey, out var backVals) &&
+                    int.TryParse(backVals.FirstOrDefault(), out var backId))
+                {
+                    shift.BackupEmployee = _employees.FirstOrDefault(e => e.Id == backId);
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

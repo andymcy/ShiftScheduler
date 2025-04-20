@@ -1,38 +1,37 @@
-@model List<ShiftScheduler.Models.ShiftAssignment>
+@model ShiftScheduler.Models.ScheduleViewModel
 
-@{
-    ViewData["Title"] = "Schedule";
-}
+<h2>Current Schedule</h2>
 
-<h1>Generated Schedule</h1>
-
-<table border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
+<table border="1" cellpadding="4">
     <tr>
-        <th>Shift Date</th>
-        <th>Time</th>
-        <th>Skills Needed</th>
-        <th>Employees</th>
+        <th>Day & Time</th>
+        <th>Required Skills</th>
+        <th>Main Employee</th>
+        <th>Backup Employee</th>
     </tr>
-
-    @foreach (var s in Model)
-    {
-        <tr>
-            <td>@s.Shift.Date.ToShortDateString()</td>
-            <td>@s.Shift.StartTime - @s.Shift.EndTime</td>
-            <td>@string.Join(", ", s.Shift.RequiredSkills)</td>
-            <td>
-                @if (s.AssignedEmployees.Count == 0)
-                {
-                    <span style="color:red;">No one assigned</span>
-                }
-                else
-                {
-                    foreach (var e in s.AssignedEmployees)
-                    {
-                        <div>@e.Name (@e.Type) - @string.Join(", ", e.Skills)</div>
-                    }
-                }
-            </td>
-        </tr>
-    }
+@foreach (var shift in Model.Shifts)
+{
+    <tr>
+        <td>@shift.Day @shift.ShiftTime</td>
+        <td>
+            @(shift.RequiredSkills.Count > 0 
+                ? string.Join(", ", shift.RequiredSkills) 
+                : "None")
+        </td>
+        <td>
+            @(shift.AssignedEmployee != null 
+                ? shift.AssignedEmployee.Name + " (" + shift.AssignedEmployee.EmploymentType + ")" 
+                : "None")
+        </td>
+        <td>
+            @(shift.BackupEmployee != null 
+                ? shift.BackupEmployee.Name + " (" + shift.BackupEmployee.EmploymentType + ")" 
+                : "None")
+        </td>
+    </tr>
+}
 </table>
+
+<p>
+    @Html.ActionLink("Edit Schedule", "EditSchedule", "Schedule", null, new { @class = "btn btn-primary" })
+</p>

@@ -1,31 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ShiftScheduler.Models
 {
-    public enum EmploymentType
-    {
-        Permanent,
-        Temporary
-    }
+
+
 
     public class Employee
     {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-        public EmploymentType Type { get; set; }
-        public List<string> Skills { get; set; } = new List<string>();
-        public List<DayOfWeek> AvailableDays { get; set; } = new List<DayOfWeek>();
-
-        public bool IsAvailableForShift(Shift shift)
-        {
-            return AvailableDays.Contains(shift.Date.DayOfWeek);
-        }
-
-        public bool HasSkillsForShift(Shift shift)
-        {
-            return shift.RequiredSkills.All(skill => Skills.Contains(skill));
-        }
+        public int    Id             { get; set; }
+        public string Name           { get; set; }
+        public EmploymentType EmploymentType { get; set; }
+        public bool   PrefersMorning { get; set; }
+        public bool   PrefersEvening { get; set; }
+        public bool   AvoidsWeekends { get; set; }
+        public List<AvailabilitySlot> Availability { get; set; } = new List<AvailabilitySlot>();
+        public List<Skill>           Skills       { get; set; } = new List<Skill>();
     }
 }
