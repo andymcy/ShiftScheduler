@@ -6,6 +6,7 @@ namespace ShiftScheduler.Models
         Sales,
         Training,
         Cleaning,
-        Manager
+        Manager,
+        Spa
     }
 }

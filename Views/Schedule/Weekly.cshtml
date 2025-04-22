@@ -1,0 +1,43 @@
+@model ShiftScheduler.Models.WeeklyScheduleViewModel
+
+<h2>Schedule for Upcoming Week (@DateTime.Today:dddd, MMM d – @DateTime.Today.AddDays(6):dddd, MMM d)</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Day &amp; Time</th>
+            <th>Required Skills</th>
+            <th>Main Employee</th>
+            <th>Backup Employee</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var ws in Model.Shifts)
+    {
+        <tr>
+            <td>@ws.Date.ToString("yyyy-MM-dd")</td>
+            <td>@ws.Shift.Day @ws.Shift.ShiftTime</td>
+            <td>
+                @(ws.Shift.RequiredSkills.Any() 
+                    ? string.Join(", ", ws.Shift.RequiredSkills) 
+                    : "None")
+            </td>
+            <td>
+                @(ws.Shift.AssignedEmployee != null 
+                    ? $"{ws.Shift.AssignedEmployee.Name} ({ws.Shift.AssignedEmployee.EmploymentType})" 
+                    : "None")
+            </td>
+            <td>
+                @(ws.Shift.BackupEmployee != null 
+                    ? $"{ws.Shift.BackupEmployee.Name} ({ws.Shift.BackupEmployee.EmploymentType})" 
+                    : "None")
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<p>
+    <a asp-action="Index" asp-controller="Schedule" class="btn btn-default">Back to Full Schedule</a>
+</p>
