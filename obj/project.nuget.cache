@@ -1,9 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "WYgAV84lYv/LrCsWzr55rXfMN54pHknXr9cchWpMFq5dqNdOJCtrlGGJILTJeIX3FM2enq4lfj9suCmCq7nE2g==",
+  "dgSpecHash": "mjXoYA7DBrNbpQkp2ianRSUwojxKLqH0GWKq9uTp1D3rJycDEe2IWb6Jg+igcpCN76yfOjI1NYCPUEVIW+z+wQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\user\\OneDrive\\Desktop\\gymshibutz\\ShiftScheduler\\ShiftScheduler.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\user\\.nuget\\packages\\google.ortools\\9.8.3296\\google.ortools.9.8.3296.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\google.ortools.runtime.linux-arm64\\9.8.3296\\google.ortools.runtime.linux-arm64.9.8.3296.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\google.ortools.runtime.linux-x64\\9.8.3296\\google.ortools.runtime.linux-x64.9.8.3296.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\google.ortools.runtime.osx-arm64\\9.8.3296\\google.ortools.runtime.osx-arm64.9.8.3296.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\google.ortools.runtime.osx-x64\\9.8.3296\\google.ortools.runtime.osx-x64.9.8.3296.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\google.ortools.runtime.win-x64\\9.8.3296\\google.ortools.runtime.win-x64.9.8.3296.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.25.0\\google.protobuf.3.25.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\microsoft.entityframeworkcore\\6.0.28\\microsoft.entityframeworkcore.6.0.28.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\6.0.28\\microsoft.entityframeworkcore.abstractions.6.0.28.nupkg.sha512",

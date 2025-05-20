@@ -15,8 +15,8 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler
 build_property._RazorSourceGeneratorDebug = 
 
-[C:/Users/user/OneDrive/Desktop/gymshibutz/ShiftScheduler/Views/Schedule/EditSchedule.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2NoZWR1bGVcRWRpdFNjaGVkdWxlLmNzaHRtbA==
+[C:/Users/user/OneDrive/Desktop/gymshibutz/ShiftScheduler/Views/Schedule/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2NoZWR1bGVcRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/user/OneDrive/Desktop/gymshibutz/ShiftScheduler/Views/Schedule/Index.cshtml]

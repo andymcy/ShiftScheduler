@@ -1,67 +1,98 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using ShiftScheduler.Models.Entities;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using ShiftScheduler.Data;
 using ShiftScheduler.Models;
 
 namespace ShiftScheduler.Controllers
 {
+    [Route("[controller]")]
     public class ScheduleController : Controller
     {
-        private static readonly List<Employee> _employees = new List<Employee>();
-        private static readonly List<Shift>    _shifts    = new List<Shift>();
-        private static bool                    _generated = false;
+        private readonly ShiftSchedulerContext _db;
 
+        public ScheduleController(ShiftSchedulerContext db) => _db = db;
 
-        [HttpGet]
-        public IActionResult Index()
+        // GET  /Schedule
+        [HttpGet("")]
+        public async Task<IActionResult> Index()
         {
-            if (!_generated)
+            // assume "current" week = Monday of this week
+            var monday = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + (int)DayOfWeek.Monday);
+
+            // load shifts + assignments for that week
+            var shifts = await _db.Shifts
+                                  .Include(s => s.RequiredSkills).ThenInclude(rs => rs.Skill)
+                                  .Include(s => s.Assignments)
+                                      .ThenInclude(a => a.MainEmployee)
+                                  .Include(s => s.Assignments)
+                                      .ThenInclude(a => a.BackupEmployee)
+                                  .Where(s => s.Assignments.Any(a => a.Date >= monday &&
+                                                                    a.Date <  monday.AddDays(7)))
+                                  .ToListAsync();
+
+            var rows = shifts.Select(s =>
             {
-                GeneticScheduler.GenerateSchedule(_employees, _shifts);
-                _generated = true;
-            }
+                var a = s.Assignments.First(); // exactly one per shift/date
+                return new ShiftRow(
+                    s.ShiftId,
+                    s.DayOfWeek,
+                    s.ShiftTime,
+                    string.Join(", ",
+                        s.RequiredSkills.Select(rs => rs.Skill.Name)),
+                    a.MainEmployee.Name,
+                    a.BackupEmployee.Name
+                );
+            }).OrderBy(r => r.DayOfWeek).ThenBy(r => r.ShiftTime).ToList();
 
             var vm = new ScheduleViewModel
             {
-                Shifts    = _shifts.OrderBy(s => s.Day).ThenBy(s => s.ShiftTime).ToList(),
-                Employees = _employees
+                WeekStartDate = monday,
+                Shifts        = rows
             };
-            return View(vm);
+            return View(vm);          // Views/Schedule/Index.cshtml
         }
 
-        [HttpGet]
-        public IActionResult EditSchedule()
+        // GET  /Schedule/Edit/5
+        [HttpGet("Edit/{id:int}")]
+        public async Task<IActionResult> Edit(int id)
         {
-            var vm = new ScheduleViewModel
+            var shift = await _db.Shifts
+                                 .Include(s => s.Assignments)
+                                 .FirstOrDefaultAsync(s => s.ShiftId == id);
+            if (shift == null) return NotFound();
+
+            var employees = await _db.Employees.OrderBy(e => e.Name).ToListAsync();
+            var assignment = shift.Assignments.First();
+
+            var vm = new EditShiftViewModel
             {
-                Shifts    = _shifts.OrderBy(s => s.Day).ThenBy(s => s.ShiftTime).ToList(),
-                Employees = _employees
+                ShiftId          = shift.ShiftId,
+                DayOfWeek        = shift.DayOfWeek,
+                ShiftTime        = shift.ShiftTime,
+                MainEmployeeId   = assignment.MainEmployeeId,
+                BackupEmployeeId = assignment.BackupEmployeeId,
+                EmployeeList     = employees.Select(e =>
+                     new SelectListItem($"{e.Name}", e.EmployeeId.ToString()))
+                     .ToList()
             };
-            return View(vm);
+            return View(vm);          // Views/Schedule/Edit.cshtml
         }
 
-        [HttpPost]
-        public IActionResult SaveSchedule(IFormCollection form)
+        // POST /Schedule/Edit
+        [HttpPost("Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EditShiftViewModel vm)
         {
-            foreach (var shift in _shifts)
-            {
-                var mainKey = $"main_{shift.Id}";
-                if (form.TryGetValue(mainKey, out var mainVals)
-                    && int.TryParse(mainVals.FirstOrDefault(), out var mainId))
-                {
-                    shift.AssignedEmployee = _employees.FirstOrDefault(e => e.Id == mainId);
-                }
+            if (!ModelState.IsValid) return View(vm);
 
-                var backupKey = $"backup_{shift.Id}";
-                if (form.TryGetValue(backupKey, out var backVals)
-                    && int.TryParse(backVals.FirstOrDefault(), out var backId))
-                {
-                    shift.BackupEmployee = _employees.FirstOrDefault(e => e.Id == backId);
-                }
-            }
+            var assignment = await _db.ShiftAssignments
+                                      .FirstOrDefaultAsync(a => a.ShiftId == vm.ShiftId);
+            if (assignment == null) return NotFound();
+
+            assignment.MainEmployeeId   = vm.MainEmployeeId;
+            assignment.BackupEmployeeId = vm.BackupEmployeeId;
+            await _db.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }

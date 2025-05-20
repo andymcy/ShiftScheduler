@@ -1,21 +1,44 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <!-- ──────────────────────────────────────────────── -->
+  <!-- Project settings                                -->
+  <!-- ──────────────────────────────────────────────── -->
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- ──────────────────────────────────────────────── -->
+  <!-- Runtime packages                                -->
+  <!-- ──────────────────────────────────────────────── -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.28">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.28">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.3" />
+    <!-- EF Core runtime (6.x to match .NET 6) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore"
+                      Version="6.0.28" />
+
+    <!-- MySQL provider for EF Core 6.x -->
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql"
+                      Version="6.0.3" />
+
+    <!-- Your genetic algorithm engine -->
+    <PackageReference Include="Google.OrTools"
+                      Version="9.8.3296" />
+  </ItemGroup>
+
+  <!-- ──────────────────────────────────────────────── -->
+  <!-- Design-time / tooling packages – not published  -->
+  <!-- ──────────────────────────────────────────────── -->
+  <ItemGroup>
+    <!-- Used by dotnet-ef at design time only -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design"
+                      Version="6.0.28"
+                      PrivateAssets="all" />
+
+    <!-- Optional CLI tooling helpers (scaffolding) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools"
+                      Version="6.0.28"
+                      PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
