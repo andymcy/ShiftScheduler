@@ -11,32 +11,37 @@ namespace ShiftScheduler.Controllers
 
         public static void GenerateSchedule(List<Employee> employees, List<Shift> shifts)
         {
+            // nothing to do if we have no employees or no shifts
+            if (employees == null || employees.Count == 0 || shifts == null || shifts.Count == 0)
+                return;
+
             int populationSize = 30;
             int generations    = 50;
             int nShifts        = shifts.Count;
             int nEmps          = employees.Count;
 
-            // Initialize population
-            var population = new List<int[]>();
+            // 1) Initialize population
+            var population = new List<int[]>(populationSize);
             for (int i = 0; i < populationSize; i++)
             {
-                var chromosome = new int[nShifts];
+                var chromosome = new int[nShifts];          // ← exactly one slot per shift
                 for (int j = 0; j < nShifts; j++)
-                    chromosome[j] = _random.Next(nEmps);
+                    chromosome[j] = _random.Next(nEmps);    // safe: 0 ≤ index < nEmps
                 population.Add(chromosome);
             }
 
-            int[] best        = population[0];
+            int[] best         = population[0];
             double bestFitness = double.NegativeInfinity;
 
-            // Evolve generations
+            // 2) Evolve
             for (int gen = 0; gen < generations; gen++)
             {
+                // a) Evaluate all
                 var fits = population
                     .Select(ch => Evaluate(ch, employees, shifts))
                     .ToArray();
 
-                // Track best
+                // b) Keep track of overall best
                 for (int i = 0; i < populationSize; i++)
                 {
                     if (fits[i] > bestFitness)
@@ -46,31 +51,38 @@ namespace ShiftScheduler.Controllers
                     }
                 }
 
-                // Sort by fitness descending
+                // c) Sort by fitness descending
                 var ordered = population
                     .Zip(fits, (chrom, fit) => (chrom, fit))
                     .OrderByDescending(cf => cf.fit)
                     .Select(cf => cf.chrom)
                     .ToList();
 
-                // Keep top 10%
-                var next = ordered.Take(populationSize / 10)
-                                  .Select(c => (int[])c.Clone())
-                                  .ToList();
+                // d) Elitism: carry top 10% forward
+                int eliteCount = Math.Max(1, populationSize / 10);
+                var next = ordered
+                    .Take(eliteCount)
+                    .Select(c => (int[])c.Clone())
+                    .ToList();
 
-                // Fill rest by crossover + mutation
+                // e) Fill the rest with crossover + mutation
                 while (next.Count < populationSize)
                 {
-                    var p1    = ordered[_random.Next(populationSize / 2)];
-                    var p2    = ordered[_random.Next(populationSize / 2)];
-                    int cross = _random.Next(nShifts);
+                    // pick two parents from the top half
+                    var p1 = ordered[_random.Next(populationSize / 2)];
+                    var p2 = ordered[_random.Next(populationSize / 2)];
+                    int cross = _random.Next(nShifts);      // split point
 
                     var child = new int[nShifts];
                     for (int j = 0; j < nShifts; j++)
-                        child[j] = j < cross ? p1[j] : p2[j];
+                        child[j] = (j < cross ? p1[j] : p2[j]);
 
+                    // mutation: reassign one random shift
                     if (_random.NextDouble() < 0.1)
-                        child[_random.Next(nShifts)] = _random.Next(nEmps);
+                    {
+                        int mIdx = _random.Next(nShifts);   // safe: 0 ≤ mIdx < nShifts
+                        child[mIdx] = _random.Next(nEmps);  // safe: 0 ≤ new employee index < nEmps
+                    }
 
                     next.Add(child);
                 }
@@ -78,12 +90,14 @@ namespace ShiftScheduler.Controllers
                 population = next;
             }
 
-            // Apply best solution
+            // 3) Apply best chromosome back onto your shifts
             for (int i = 0; i < nShifts; i++)
             {
                 int empIdx = best[i];
-                shifts[i].AssignedEmployee = employees
-                    .ElementAtOrDefault(empIdx);
+                shifts[i].AssignedEmployee =
+                    (empIdx >= 0 && empIdx < employees.Count)
+                        ? employees[empIdx]
+                        : null;
             }
         }
 
@@ -94,15 +108,20 @@ namespace ShiftScheduler.Controllers
 
             for (int i = 0; i < shifts.Count; i++)
             {
-                var emp   = emps[chromosome[i]];
+                // guard just in case
+                int gene = chromosome[i];
+                if (gene < 0 || gene >= emps.Count)
+                    continue;
+
+                var emp   = emps[gene];
                 var shift = shifts[i];
 
-                // 1) availability
+                // availability
                 bool available = emp.Availability
                     .Any(a => a.Day == shift.Day && a.Time == shift.ShiftTime);
                 score += available ? +1 : -10;
 
-                // 2) required skills
+                // skills
                 if (shift.RequiredSkills.Any())
                 {
                     bool hasAll = shift.RequiredSkills
@@ -110,18 +129,14 @@ namespace ShiftScheduler.Controllers
                     score += hasAll ? +2 : -5;
                 }
 
-                // 3) temporary bonus/penalty
+                // encourage temps on busy days
                 bool isBusyDay = busyDays.Contains(shift.Day);
                 if (emp.EmploymentType == EmploymentType.Temporary)
                 {
                     if (isBusyDay)
-                    {
-                        // Encourage temporaries on busy days
                         score += 2;
-                    }
                     else
                     {
-                        // Penalize if a permanent could fill
                         bool permAvail = emps.Any(o =>
                             o.EmploymentType == EmploymentType.Permanent
                             && o.Availability.Any(a => a.Day == shift.Day && a.Time == shift.ShiftTime)
@@ -131,9 +146,11 @@ namespace ShiftScheduler.Controllers
                     }
                 }
 
-                // 4) soft preferences
+                // time preferences
                 if (emp.PrefersMorning && shift.ShiftTime == ShiftTime.Evening) score -= 1;
                 if (emp.PrefersEvening && shift.ShiftTime == ShiftTime.Morning) score -= 1;
+
+                // weekend avoidance
                 bool weekend = shift.Day == DayOfWeek.Saturday || shift.Day == DayOfWeek.Sunday;
                 if (emp.AvoidsWeekends && weekend) score -= 2;
             }

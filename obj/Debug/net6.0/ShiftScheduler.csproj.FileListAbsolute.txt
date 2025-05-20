@@ -24,3 +24,14 @@ C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\obj\Debug\net6.0\refint
 C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\obj\Debug\net6.0\ShiftScheduler.pdb
 C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\obj\Debug\net6.0\ShiftScheduler.genruntimeconfig.cache
 C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\obj\Debug\net6.0\ref\ShiftScheduler.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Humanizer.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Design.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\MySqlConnector.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\Pomelo.EntityFrameworkCore.MySql.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\bin\Debug\net6.0\System.Diagnostics.DiagnosticSource.dll
+C:\Users\user\OneDrive\Desktop\gymshibutz\ShiftScheduler\obj\Debug\net6.0\ShiftScheduler.csproj.CopyComplete
