@@ -75,10 +75,10 @@ namespace ShiftScheduler.Data
 
             // ────────── WEEKLYSCHEDULE ⇄ SHIFTASSIGNMENT (NEW) ──────────
             m.Entity<ShiftAssignment>()
-             .HasOne(sa => sa.WeeklySchedule)
-             .WithMany(ws => ws.Assignments)
-             .HasForeignKey(sa => sa.ScheduleId)
-             .OnDelete(DeleteBehavior.Restrict);
+            .HasOne(sa => sa.WeeklySchedule)
+            .WithMany(ws => ws.Assignments)
+            .HasForeignKey(sa => sa.ScheduleId)   // nullable FK
+            .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -27,8 +27,8 @@ namespace ShiftScheduler.Models
         public string DayOfWeek        { get; set; } = "";
         public string ShiftTime        { get; set; } = "";
 
-        public int    MainEmployeeId   { get; set; }
-        public int    BackupEmployeeId { get; set; }
+        public int?    MainEmployeeId   { get; set; }
+        public int?    BackupEmployeeId { get; set; }
 
         // rendered as <select> options
         public List<SelectListItem> EmployeeList { get; set; } = new();
