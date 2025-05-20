@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using ShiftScheduler.Models.Entities;
 using ShiftScheduler.Models;
 
 namespace ShiftScheduler.Controllers
