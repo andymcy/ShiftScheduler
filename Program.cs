@@ -1,29 +1,29 @@
-
 using Microsoft.EntityFrameworkCore;
 using ShiftScheduler.Data;
 using ShiftScheduler.Services;
-using ShiftScheduler.Models;          // ← add this
-
+using ShiftScheduler.Models;
+using System.Text.Json.Serialization;                // ➊ NEW
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ──────────────── Services ────────────────
+// ─────────────────────── services ───────────────────────
 
-// MVC (controllers + Razor views)
-builder.Services.AddControllersWithViews();
+// MVC (+ Razor) ➋ ADD IgnoreCycles so JSON never crashes
+builder.Services
+       .AddControllersWithViews()
+       .AddJsonOptions(o =>
+           o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-// DbContext  (Pomelo + MySQL)
 builder.Services.AddDbContext<ShiftSchedulerContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("ShiftDb"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("ShiftDb"))));
 
-// Genetic-algorithm scheduler
 builder.Services.AddScoped<ScheduleSolver>();
 
 var app = builder.Build();
 
-// ──────────────── Middleware pipeline ────────────────
+// ─────────────────────── pipeline ───────────────────────
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -31,23 +31,21 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();      // wwwroot, css, js, etc.
+app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-// ──────────────── Minimal-API endpoint ────────────────
+// ─────────────────────── GA demo endpoint ───────────────
 app.MapGet("/solve", async (ShiftSchedulerContext db, ScheduleSolver solver) =>
 {
     var monday = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + (int)DayOfWeek.Monday);
 
-    // try to load an existing week row; otherwise create one
+    // ensure week row exists
     var week = await db.WeeklySchedules
                        .FirstOrDefaultAsync(w => w.WeekStartDate == monday)
                ?? new WeeklySchedule { WeekStartDate = monday };
-
     if (week.ScheduleId == 0) db.WeeklySchedules.Add(week);
 
-    // load data for the GA
     var employees = await db.Employees
                             .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill)
                             .ToListAsync();
@@ -55,24 +53,20 @@ app.MapGet("/solve", async (ShiftSchedulerContext db, ScheduleSolver solver) =>
                             .Include(s => s.RequiredSkills).ThenInclude(rs => rs.Skill)
                             .ToListAsync();
 
-    // run GA
     var assignments = solver.GenerateSchedule(employees, shifts);
 
-    // attach the correct ScheduleId
     foreach (var a in assignments)
     {
         a.ScheduleId = week.ScheduleId;
-        a.Date       = monday;          // or any logic per shift
+        a.Date       = monday;     // simple demo: all on Monday
     }
 
     db.ShiftAssignments.AddRange(assignments);
-    await db.SaveChangesAsync();
+    await db.SaveChangesAsync();   // ← now succeeds, no JSON loop
     return Results.Ok(assignments);
 });
 
-
-// ──────────────── MVC routing ────────────────
-// Default route: root URL goes to Schedule/Index
+// MVC default route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Schedule}/{action=Index}/{id?}");

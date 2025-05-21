@@ -1,17 +1,18 @@
-using System;
 using System.Collections.Generic;
 
 namespace ShiftScheduler.Models
 {
     public class Shift
     {
-        public int    ShiftId           { get; set; }
-        public string Name              { get; set; } = "";
-        public string DayOfWeek         { get; set; } = ""; // e.g. "Monday"
-        public string ShiftTime         { get; set; } = ""; // "Morning"/"Evening"
-        public int    RequiredEmployees { get; set; }
+        public int    ShiftId    { get; set; }
+        public string Name       { get; set; } = string.Empty;
+        public string DayOfWeek  { get; set; } = string.Empty;
 
-        public ICollection<ShiftRequiredSkill> RequiredSkills { get; set; } = new List<ShiftRequiredSkill>();
-        public ICollection<ShiftAssignment>    Assignments    { get; set; } = new List<ShiftAssignment>();
+        // ▼ add (or rename an existing column to) this property
+        public string ShiftTime  { get; set; } = string.Empty;   // no max-length constraint
+
+        // navigation properties
+        public ICollection<ShiftRequiredSkill> RequiredSkills  { get; set; } = new List<ShiftRequiredSkill>();
+        public ICollection<ShiftAssignment>    Assignments     { get; set; } = new List<ShiftAssignment>();
     }
 }
