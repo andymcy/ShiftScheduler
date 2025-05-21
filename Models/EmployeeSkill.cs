@@ -11,6 +11,8 @@ namespace ShiftScheduler.Models
         public Employee Employee { get; set; } = null!;
 
         public int SkillId { get; set; }
+
+       [JsonIgnore]
         public Skill Skill { get; set; } = null!;
     }
 }
