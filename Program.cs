@@ -7,12 +7,13 @@ using ShiftScheduler.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 //  Services 
-
 builder.Services
     .AddControllersWithViews()
     .AddJsonOptions(opt =>
     {
+        // skip over object cycles instead of blowing up at depth 64
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        // don’t suppress any other properties by default
         opt.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
     });
 
@@ -22,7 +23,7 @@ builder.Services.AddDbContext<ShiftSchedulerContext>(options =>
         builder.Configuration.GetConnectionString("ShiftDb"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("ShiftDb"))));
 
-// Genetic-algorithm scheduler
+// Genetic‐algorithm scheduler
 builder.Services.AddScoped<ScheduleSolver>();
 
 var app = builder.Build();
