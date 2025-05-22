@@ -4,10 +4,10 @@ namespace ShiftScheduler.Models
 {
     public class ShiftRequiredSkill
     {
-        // composite key (ShiftId + SkillId) configured in DbContext
+        //   ShiftId + SkillId configured in DbContext
         public int ShiftId { get; set; }
 
-        [JsonIgnore]                 // ← prevents Shift⇄ShiftRequiredSkill cycle
+        [JsonIgnore]                
         public Shift Shift { get; set; } = null!;
 
         public int SkillId { get; set; }

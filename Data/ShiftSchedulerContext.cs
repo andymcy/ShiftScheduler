@@ -19,7 +19,7 @@ namespace ShiftScheduler.Data
 
         protected override void OnModelCreating(ModelBuilder m)
         {
-            // ────────── PRIMARY / COMPOSITE KEYS ──────────
+            //  PRIMARY -, COMPOSITE KEYS 
             m.Entity<EmployeeSkill>()
              .HasKey(es => new { es.EmployeeId, es.SkillId });
 
@@ -27,12 +27,12 @@ namespace ShiftScheduler.Data
              .HasKey(rs => new { rs.ShiftId, rs.SkillId });
 
             m.Entity<ShiftAssignment>()
-             .HasKey(sa => sa.AssignmentId);      // explicit PK
+             .HasKey(sa => sa.AssignmentId);      //  PK
 
             m.Entity<WeeklySchedule>()
-             .HasKey(ws => ws.ScheduleId);        // explicit PK
+             .HasKey(ws => ws.ScheduleId);        //  PK
 
-            // ────────── EMPLOYEE ⇄ EMPLOYEESKILL ⇄ SKILL ──────────
+            //  EMPLOYEE - EMPLOYEESKILL - SKILL 
             m.Entity<Employee>()
              .HasMany(e => e.EmployeeSkills)
              .WithOne(es => es.Employee)
@@ -43,7 +43,7 @@ namespace ShiftScheduler.Data
              .WithOne(es => es.Skill)
              .HasForeignKey(es => es.SkillId);
 
-            // ────────── SHIFT ⇄ SHIFTREQUIREDSKILL ⇄ SKILL ──────────
+            //  SHIFT - SHIFTREQUIREDSKILL - SKILL
             m.Entity<Shift>()
              .HasMany(s => s.RequiredSkills)
              .WithOne(rs => rs.Shift)
@@ -54,18 +54,18 @@ namespace ShiftScheduler.Data
              .WithOne(rs => rs.Skill)
              .HasForeignKey(rs => rs.SkillId);
 
-            // ────────── SHIFT ⇄ SHIFTASSIGNMENT ──────────
+            //  SHIFT  SHIFTASSIGNMENT 
             m.Entity<Shift>()
              .HasMany(s => s.Assignments)
              .WithOne(a => a.Shift)
              .HasForeignKey(a => a.ShiftId);
 
-            // ────────── EMPLOYEE (main / backup) ⇄ SHIFTASSIGNMENT ──────────
+            //  EMPLOYEE (main / backup) - SHIFTASSIGNMENT 
             m.Entity<ShiftAssignment>()
              .HasOne(sa => sa.MainEmployee)
              .WithMany(e => e.MainAssignments)
              .HasForeignKey(sa => sa.MainEmployeeId)
-             .OnDelete(DeleteBehavior.Restrict);   // avoid cascade loop
+             .OnDelete(DeleteBehavior.Restrict);   
 
             m.Entity<ShiftAssignment>()
              .HasOne(sa => sa.BackupEmployee)
@@ -73,7 +73,7 @@ namespace ShiftScheduler.Data
              .HasForeignKey(sa => sa.BackupEmployeeId)
              .OnDelete(DeleteBehavior.Restrict);
 
-            // ────────── WEEKLYSCHEDULE ⇄ SHIFTASSIGNMENT (NEW) ──────────
+            //  WEEKLYSCHEDULE - SHIFTASSIGNMENT (NEW) 
             m.Entity<ShiftAssignment>()
             .HasOne(sa => sa.WeeklySchedule)
             .WithMany(ws => ws.Assignments)

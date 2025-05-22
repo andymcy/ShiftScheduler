@@ -1,14 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;         // ← NEW
+using System.Text.Json.Serialization;         
 using ShiftScheduler.Data;
 using ShiftScheduler.Services;
 using ShiftScheduler.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─────────────────────────── Services ───────────────────────────
+//  Services 
 
-// MVC  (+ Razor)  ─ now tells System.Text.Json to ignore reference-loops
 builder.Services
     .AddControllersWithViews()
     .AddJsonOptions(opt =>
@@ -28,7 +27,6 @@ builder.Services.AddScoped<ScheduleSolver>();
 
 var app = builder.Build();
 
-// ─────────────────────────── Pipeline ───────────────────────────
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -40,7 +38,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-// ──────────────────────── Minimal-API: /solve ───────────────────
+//  API: /solve 
 app.MapGet("/solve", async (ShiftSchedulerContext db, ScheduleSolver solver) =>
 {
     var monday = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek +
@@ -71,7 +69,6 @@ app.MapGet("/solve", async (ShiftSchedulerContext db, ScheduleSolver solver) =>
     db.ShiftAssignments.AddRange(assignments);
     await db.SaveChangesAsync();
 
-    // ✔ No more cycle-error because ReferenceHandler.IgnoreCycles is active
     return Results.Ok(assignments);
 });
 

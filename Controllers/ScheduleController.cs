@@ -11,9 +11,7 @@ public class ScheduleController : Controller
     private readonly ShiftSchedulerContext _db;
     public ScheduleController(ShiftSchedulerContext db) => _db = db;
 
-    // ──────────────────────────────────────────────
     // GET /Schedule
-    // ──────────────────────────────────────────────
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
@@ -28,7 +26,7 @@ public class ScheduleController : Controller
                        a.Date >= monday && a.Date <  monday.AddDays(7)))
             .ToListAsync();
 
-        // 6-parameter ctor: ShiftId, DayOfWeek, ShiftTime, Skills, MainName, BackupName
+        // ShiftId, DayOfWeek, ShiftTime, Skills, MainName, BackupName
         var rows = shifts.Select(s =>
         {
             var a = s.Assignments.First();
@@ -52,9 +50,7 @@ public class ScheduleController : Controller
         return View(vm);
     }
 
-    // ──────────────────────────────────────────────
-    // GET /Schedule/Edit/{id}
-    // ──────────────────────────────────────────────
+    // GET /Schedule/Edit/id
     [HttpGet("Edit/{id:int}")]
     public async Task<IActionResult> Edit(int id)
     {
@@ -81,9 +77,7 @@ public class ScheduleController : Controller
         return View(vm);
     }
 
-    // ──────────────────────────────────────────────
     // POST /Schedule/Edit
-    // ──────────────────────────────────────────────
     [HttpPost("Edit")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditShiftViewModel vm)

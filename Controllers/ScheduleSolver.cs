@@ -5,74 +5,83 @@ using ShiftScheduler.Models;
 
 namespace ShiftScheduler.Services
 {
-    // 100 % compatible with your previous static GeneticScheduler,
-    // but now in a DI-friendly class.
     public class ScheduleSolver
     {
         private readonly Random _rand = new();
 
-        // A *very* small GA example; replace with your real OR-Tools code.
         public List<ShiftAssignment> GenerateSchedule(
             List<Employee> employees,
-            List<Shift>    shifts)
+            List<Shift> shifts,
+            int popSize = 50,
+            int generations = 100,
+            double mutationRate = 0.1)
         {
-            // --- prepare data for GA ---
-            int popSize    = 30;
-            int generations= 50;
-            int nShifts    = shifts.Count;
-            int nEmps      = employees.Count;
+            int nShifts = shifts.Count;
+            int nEmps = employees.Count;
 
-            // population = list of chromosomes; each chromosome = int[nShifts]
+            // Initialize population
             var population = new List<int[]>();
             for (int i = 0; i < popSize; i++)
             {
-                var chrom = new int[nShifts];
+                var chromosome = new int[nShifts];
                 for (int j = 0; j < nShifts; j++)
-                    chrom[j] = _rand.Next(nEmps);
-                population.Add(chrom);
+                    chromosome[j] = _rand.Next(nEmps);
+                population.Add(chromosome);
             }
 
-            int[]   bestChrom   = population[0];
-            double  bestFitness = double.NegativeInfinity;
+            int[] bestChrom = population[0];
+            double bestFitness = double.NegativeInfinity;
 
             for (int gen = 0; gen < generations; gen++)
             {
+                // Evaluate fitness and find the best chromosome
                 foreach (var chrom in population)
                 {
-                    double fit = Fitness(chrom, employees, shifts);
-                    if (fit > bestFitness)
+                    double fitness = Fitness(chrom, employees, shifts);
+                    if (fitness > bestFitness)
                     {
-                        bestFitness = fit;
-                        bestChrom   = chrom;
+                        bestFitness = fitness;
+                        bestChrom = chrom;
                     }
                 }
 
-                // very naive mutation
-                population = population.Select(c =>
+                // Selection (Tournament)
+                var selected = new List<int[]>();
+                for (int i = 0; i < popSize; i++)
                 {
-                    var copy = c.ToArray();
-                    if (_rand.NextDouble() < 0.3)
-                        copy[_rand.Next(nShifts)] = _rand.Next(nEmps);
-                    return copy;
-                }).ToList();
+                    selected.Add(TournamentSelect(population, employees, shifts));
+                }
+
+                // Crossover
+                population.Clear();
+                for (int i = 0; i < popSize / 2; i++)
+                {
+                    var parent1 = selected[_rand.Next(selected.Count)];
+                    var parent2 = selected[_rand.Next(selected.Count)];
+
+                    (int[] child1, int[] child2) = Crossover(parent1, parent2);
+
+                    population.Add(child1);
+                    population.Add(child2);
+                }
+
+                // Mutation
+                foreach (var chrom in population)
+                {
+                    if (_rand.NextDouble() < mutationRate)
+                        Mutate(chrom, nEmps);
+                }
             }
 
-            // translate best chromosome into assignments
-            var result = new List<ShiftAssignment>();
-            for (int i = 0; i < nShifts; i++)
+            //  best chromosome into shift assignments
+            return bestChrom.Select((empIdx, shiftIdx) => new ShiftAssignment
             {
-                result.Add(new ShiftAssignment
-                {
-                    ShiftId        = shifts[i].ShiftId,
-                    Date           = DateTime.Today,  // set real date outside
-                    MainEmployeeId = employees[bestChrom[i]].EmployeeId,
-                    BackupEmployeeId = employees[_rand.Next(nEmps)].EmployeeId
-                });
-            }
-            return result;
+                ShiftId = shifts[shiftIdx].ShiftId,
+                MainEmployeeId = employees[empIdx].EmployeeId,
+                BackupEmployeeId = employees[_rand.Next(nEmps)].EmployeeId
+            }).ToList();
         }
 
-        // simple fitness: +1 per filled shift, −2 per weekend if AvoidsWeekends
         private double Fitness(int[] chrom, List<Employee> emps, List<Shift> shifts)
         {
             double score = 0;
@@ -81,9 +90,8 @@ namespace ShiftScheduler.Services
                 var e = emps[chrom[i]];
                 var s = shifts[i];
 
-                score += 1; // filled
-
-                if (s.DayOfWeek is "Saturday" or "Sunday" && e.AvoidsWeekends)
+                score += 1;
+                if ((s.DayOfWeek is "Saturday" or "Sunday") && e.AvoidsWeekends)
                     score -= 2;
                 if (s.ShiftTime == "Morning" && !e.PrefersMorning)
                     score -= 1;
@@ -91,6 +99,38 @@ namespace ShiftScheduler.Services
                     score -= 1;
             }
             return score;
+        }
+
+        private int[] TournamentSelect(List<int[]> population, List<Employee> employees, List<Shift> shifts, int tournamentSize = 3)
+        {
+            var competitors = new List<int[]>();
+            for (int i = 0; i < tournamentSize; i++)
+                competitors.Add(population[_rand.Next(population.Count)]);
+
+            return competitors.OrderByDescending(c => Fitness(c, employees, shifts)).First();
+        }
+
+        private (int[], int[]) Crossover(int[] parent1, int[] parent2)
+        {
+            int length = parent1.Length;
+            int crossPoint = _rand.Next(1, length - 1);
+
+            int[] child1 = new int[length];
+            int[] child2 = new int[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                child1[i] = i < crossPoint ? parent1[i] : parent2[i];
+                child2[i] = i < crossPoint ? parent2[i] : parent1[i];
+            }
+
+            return (child1, child2);
+        }
+
+        private void Mutate(int[] chromosome, int nEmps)
+        {
+            int geneToMutate = _rand.Next(chromosome.Length);
+            chromosome[geneToMutate] = _rand.Next(nEmps);
         }
     }
 }

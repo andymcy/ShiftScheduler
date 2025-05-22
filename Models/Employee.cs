@@ -6,7 +6,7 @@ namespace ShiftScheduler.Models
     {
         public int    EmployeeId     { get; set; }
         public string Name           { get; set; } = "";
-        public int    EmploymentType { get; set; }    // 0=part-time,1=full-time…
+        public int    EmploymentType { get; set; }    // 0=part time,1=full time…
         public bool   PrefersMorning { get; set; }
         public bool   PrefersEvening { get; set; }
         public bool   AvoidsWeekends { get; set; }

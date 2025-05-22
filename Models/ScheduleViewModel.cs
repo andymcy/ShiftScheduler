@@ -20,7 +20,7 @@ namespace ShiftScheduler.Models
         public List<ShiftRow>  Shifts        { get; init; } = new();
     }
 
-    // model used in the Edit page
+    //  used in the Edit page
     public class EditShiftViewModel
     {
         public int    ShiftId          { get; set; }
